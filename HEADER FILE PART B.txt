@@ -1,0 +1,169 @@
+#ifndef DELIVERYROUTE_H
+#define DELIVERYROUTE_H
+
+#include <iostream>
+#include <string>
+#include <utility>
+
+using namespace std;
+struct DeliveryStop
+{
+    int orderID;
+    string customer;
+    string address;
+    string food;
+    double amount;
+    DeliveryStop* next;
+};
+class LinkedList
+{
+private:
+    DeliveryStop* head;
+    int count;
+
+    DeliveryStop* GetNodeAt(int index)
+    {
+        DeliveryStop* current = head;
+        for (int i = 0; i < index && current != nullptr; i++)
+            current = current->next;
+        return current;
+    }
+
+    void CopyStopData(DeliveryStop* a, DeliveryStop* b)
+    {
+        swap(a->orderID, b->orderID);
+        swap(a->customer, b->customer);
+        swap(a->address, b->address);
+        swap(a->food, b->food);
+        swap(a->amount, b->amount);
+    }
+
+public:
+    LinkedList() : head(nullptr), count(0) {}
+
+    void Insert(DeliveryStop* stop)
+    {
+        if (stop == nullptr) return;
+        stop->next = head;
+        head = stop;
+        count++;
+    }
+
+    DeliveryStop* Remove()
+    {
+        if (IsEmpty()) return nullptr;
+        DeliveryStop* stop = head;
+        head = head->next;
+        stop->next = nullptr;
+        count--;
+        return stop;
+    }
+
+    bool IsEmpty() { return head == nullptr; }
+    bool IsNotEmpty() { return head != nullptr; }
+
+    void InsertAt(DeliveryStop* stop, int index)
+    {
+        if (stop == nullptr) return;
+        if (index < 0) index = 0;
+        if (index > count) index = count;
+        if (index == 0)
+        {
+            Insert(stop);
+            return;
+        }
+        DeliveryStop* previous = GetNodeAt(index - 1);
+        stop->next = previous->next;
+        previous->next = stop;
+        count++;
+    }
+
+    DeliveryStop* RemoveAt(int index)
+    {
+        if (IsEmpty()) return nullptr;
+        if (index < 0) index = 0;
+        if (index >= count) index = count - 1;
+        if (index == 0) return Remove();
+        DeliveryStop* previous = GetNodeAt(index - 1);
+        DeliveryStop* stop = previous->next;
+        previous->next = stop->next;
+        stop->next = nullptr;
+        count--;
+        return stop;
+    }
+
+    void Swap(int index1, int index2)
+    {
+        if (index1 < 0 || index1 >= count ||
+            index2 < 0 || index2 >= count || index1 == index2)
+            return;
+        CopyStopData(GetNodeAt(index1), GetNodeAt(index2));
+    }
+
+    void Sort()  
+    {
+        for (DeliveryStop* i = head; i != nullptr; i = i->next)
+            for (DeliveryStop* j = i->next; j != nullptr; j = j->next)
+                if (i->orderID > j->orderID)
+                    CopyStopData(i, j);
+    }
+
+    void Reverse()
+    {
+        DeliveryStop* previous = nullptr;
+        DeliveryStop* current = head;
+        DeliveryStop* next = nullptr;
+        while (current != nullptr)
+        {
+            next = current->next;
+            current->next = previous;
+            previous = current;
+            current = next;
+        }
+        head = previous;
+    }
+
+    void Print()
+    {
+        DeliveryStop* current = head;
+        int stopNo = 0;
+        double total = 0;
+        cout << "\nStop\tOrder\tCustomer\tAddress\t\tFood\t\t\tAmount\n";
+        cout << "----------------------------------------------------------------------------\n";
+        while (current != nullptr)
+        {
+            cout << stopNo << "\t" << current->orderID << "\t"
+                 << current->customer << "\t\t"
+                 << current->address << "\t"
+                 << current->food << "\t"
+                 << current->amount << endl;
+            total += current->amount;
+            current = current->next;
+            stopNo++;
+        }
+        cout << "Total stops: " << count << "  |  Cash to collect: " << total << endl;
+    }
+
+    LinkedList(const LinkedList& other) : head(nullptr), count(0)
+    {
+        for (DeliveryStop* c = other.head; c != nullptr; c = c->next)
+            InsertAt(new DeliveryStop{ c->orderID, c->customer, c->address,
+                                       c->food, c->amount, nullptr }, count);
+    }
+
+    LinkedList& operator=(const LinkedList& other)
+    {
+        if (this == &other) return *this;
+        while (!IsEmpty()) delete Remove();
+        for (DeliveryStop* c = other.head; c != nullptr; c = c->next)
+            InsertAt(new DeliveryStop{ c->orderID, c->customer, c->address,
+                                       c->food, c->amount, nullptr }, count);
+        return *this;
+    }
+
+    ~LinkedList()
+    {
+        while (!IsEmpty()) delete Remove();
+    }
+};
+
